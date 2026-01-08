@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void add(Node*& head, Node* current, student* student);
+void add(Node*& head, Node* prev, Node* current, student* student);
 void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* next, float GPA);
 
@@ -34,7 +34,6 @@ int main(){
       float inGPA = 0;
       char inName[15];
       int inID;
-      Node* current = head;
   
       cout<<"GPA of student?";
       cin>>inGPA;
@@ -48,12 +47,12 @@ int main(){
       //create student pointer to assign to this node
       student* s = new student(inGPA, inName, inID);
       //assign that pointer
-      add(head, current, s);
+      add(head, NULL, head, s);
     }
 
     //print with recursion
     if(strcmp(input, "PRINT") == 0){
-      print(head,head);
+      print(head, head);
     }
     //delete -> only works for 1 node in list just testing destructor
     if(strcmp(input, "DELETE") == 0){
@@ -69,44 +68,51 @@ int main(){
 }
 
 
-//add func, should i make sort a different func? so it adds the thing regularly to the end, and the
-void add(Node*& head, Node* current, student* student){
+//add func, do i need HEAD?
+void add(Node*& head, Node* prev, Node* current, student* student){
   //head is always head, current is the one we are looking at at the moment.
   
   if(current == NULL){
     //add when list is empty
     head = new Node(student);
   }
-  else{ //list has at least one node
+  else{ //list has at least one node    
     if(current->getStudent()->getID() < student->getID()){
-      //if ID to be added is greater, then call add again
-      add(head, current->getNext(), student);
-    }else{ //ID must be added here
-      if(current == head){ //we are at start of list and must insert at start
-	
+      if(current->getNext() == NULL){ //if student ID is still GREATER Than the one its currently on, but th enext is NULL, then we must add it at end of list!!! and NEVER let current become NULL excpet for when list is truly empty
+	current->setNext(new Node(student));
+	return;
       }
-      if(current == NULL){ //we are at end of list and it must be inserted here
-
+      prev = current;
+      add(head, prev, current->getNext(), student);
+    }else{ //must add this student IN FRONT of current
+      if(prev == NULL){ //we are inserting at beginning of LIST must readjust head
+	Node* newNode = new Node(student); //create new node
+	newNode->setNext(current);
+	head = newNode; //update head as this new node
+	return;
       }
-      //first detect where it needs to be put in
-      //add node to list
+      //we are inserting BEFORE the CURRENT node!
+      Node* newNode = new Node(student);
+      newNode->setNext(current);
+      prev->setNext(newNode);
+      
     }
     //when the next thing is null, set the 
-    current->setNext(new Node(student));
+    
   }
 }
 
 //print func
-void print(Node*& head, Node* next){
-  if(next == head){ //on first one print 
+void print(Node*& head, Node* current){
+  if(current == head){ //on first one print 
     cout<<"List: ";
   }
 
-  if(next != NULL){ //if we are not at last one in list
-    cout<<next->getStudent()->getName()<<", ";
-    cout<<next->getStudent()->getID()<<", ";
-    cout<<next->getStudent()->getGPA()<<"  ";
-    print(head,next->getNext()); //call func again but 1 more down list
+  if(current != NULL){ //if we are not at last one in list
+    cout<<current->getStudent()->getName()<<", ";
+    cout<<current->getStudent()->getID()<<", ";
+    cout<<current->getStudent()->getGPA()<<"  ";
+    print(head,current->getNext()); //call func again but 1 more down list
   }
 }
 
