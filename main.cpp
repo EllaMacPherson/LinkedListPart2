@@ -10,28 +10,32 @@
 
 using namespace std;
 
+// Function decleration
 void add(Node*& head, Node* prev, Node* current, student* student);
 void print(Node*& head, Node* next);
 void Delete(Node*& head, Node* prev, Node* current, int ID);
 void average(Node*& head, Node* current, float total, int it);
+
 
 int main(){
 
   char input[10];
   bool go = true;
 
-  //start empty
+  //start with list empty
   Node* head = NULL;
 
   //loop forever
   while (go == true){
+    //clear input
     input[0] = '\0';
     cout<<"Enter ADD, DELETE, PRINT, AVERAGE, or QUIT "<<endl;
     cin>>input;
     cin.ignore();
-    //add and ask for inputs
+    
+    //check input
     if(strcmp(input, "ADD") == 0) {
-
+      //They want to add so collect all inputs
       float inGPA = 0;
       char inName[15];
       int inID;
@@ -45,77 +49,90 @@ int main(){
       cout<< "GPA of student? ";
       cin>>inGPA;
       cin.ignore();
+      
       //create student pointer to assign to this node
       student* s = new student(inGPA, inName, inID);
-      //assign that pointer
+      
+      //assign that pointer and sort ID with add function
       add(head, NULL, head, s);
     }
 
-    //print with recursion
+    //print
     if(strcmp(input, "PRINT") == 0){
       print(head, head);
     }
 
+    //delete
     if(strcmp(input, "DELETE") == 0){
+      //gather input
       cout<<"Enter student ID to delete"<<endl;
       int ID = 0;
       cin>>ID;
-      
+
+      //delete function
       Delete(head, NULL, head, ID);
     }
+    
+    //Average function
     if(strcmp(input, "AVERAGE") == 0){
       average(head, head, 0, 0);
     }
+    //Quit program
     if(strcmp(input, "QUIT") == 0){
+
       //iterate through
       while(head != NULL){
 	Node* toDelete = head;
 	head = head->getNext();
-	delete toDelete;
+	delete toDelete; //delete every node
       }
-      
+
+      //exit main!
       return 0;
     }
   }
-  
-  return 0;
 }
 
 
-//add func DONE, do i need HEAD, yes to set new node
+//add func
 void add(Node*& head, Node* prev, Node* current, student* student){
-  //head is always head, current is the one we are looking at at the moment.
-  
+
+  // just add when list is empty
   if(current == NULL){
-    //add when list is empty
     head = new Node(student);
   }
   else{ //list has at least one node    
-    if(current->getStudent()->getID() < student->getID()){
-      if(current->getNext() == NULL){ //if student ID is still GREATER Than the one its currently on, but th enext is NULL, then we must add it at end of list!!! and NEVER let current become NULL excpet for when list is truly empty
+    if(current->getStudent()->getID() < student->getID()){ //Check if ID is greater than, we must continue if so
+      if(current->getNext() == NULL){ //if student ID is still GREATER Than the one its currently on, but th next is NULL, then we must add it at end of list!!! Don't want current to ever equal NULL excpet for when list is truly empty. So must check in advance here if we're at the end and the ID is still greater
+	//If case is true, then we want our last node to be this one, as it is the greatest in the list
 	current->setNext(new Node(student));
 	return;
       }
+      //If not true, recursively call add function again, store previous for storing in middle of the list later
       prev = current;
       add(head, prev, current->getNext(), student);
-    }else{ //must add this student IN FRONT of current
-      if(prev == NULL){ //we are inserting at beginning of LIST must readjust head
+    }
+    else{ //ID is LESS than next one, so we must insert it here
+      if(prev == NULL){ //If previous is NULL, then we are at head of list and must reset head
 	Node* newNode = new Node(student); //create new node
-	newNode->setNext(current);
+	newNode->setNext(current); //push current node back
 	head = newNode; //update head as this new node
-	return;
+	return; //exit function
       }
-      //we are inserting BEFORE the CURRENT node!
-      Node* newNode = new Node(student);
-      newNode->setNext(current);
-      prev->setNext(newNode);
+
+      //If program is here - We are inserting in the middle of the list
+
+      Node* newNode = new Node(student); //create placeholder for our node
+      newNode->setNext(current); //set next as current (we are 1 ahead of where it should be)
+      prev->setNext(newNode); //set previous as linked to this node now!
       
     }    
   }
 }
 
-//print func DONE
+//print func
 void print(Node*& head, Node* current){
+
   if(current == head){ //on first one print 
     cout<<"List: ";
   }
@@ -128,11 +145,11 @@ void print(Node*& head, Node* current){
   }
 }
 
-//delete func DONE ONLY need to delete first node with matching GPA in the list! USE DESTRUCTOR!!!!!!!!!!!
+//delete func
 void Delete(Node*& head, Node* prev, Node* current, int ID){
 
   if(current == head){ //first call
-    cout<<"Matches found: ";
+    cout<<"Match found & deleted: ";
   }
 
   if(current == NULL){ //when nothing in list
@@ -140,22 +157,24 @@ void Delete(Node*& head, Node* prev, Node* current, int ID){
     return;
   }
 
-  //if finds GPA --> RUN RECURSION AND DELETE
+  //check if ID matches if it does --> run recursion and delete
   if(current->getStudent()->getID() == ID){
+    //Print name of student found
     cout<<current->getStudent()->getName()<<" " <<endl;
-    //RUN DELETION and exit func
-    //DETERMINE WHERE WE ARE IN THE LIST
-    if(prev == NULL){ // delete like beginning of list
+
+    //Determine position of deletion
+    if(prev == NULL){ // delete beginning of list
       head = current->getNext();
       delete current;
       return;
     }
-    else if(current->getNext() == NULL){ //delete like end of list
+    else if(current->getNext() == NULL){ //delete end of list
       if(prev == NULL){ //if only item in list
 	delete current;
-	head = NULL;
+	head = NULL; //change head
 	return;
       }
+      //end delete but its only one in list
       prev->setNext(NULL);
       delete current;
       return;
@@ -169,16 +188,19 @@ void Delete(Node*& head, Node* prev, Node* current, int ID){
     return;
   }
 
-  if(current->getNext() != NULL){ //look at next one if it's there!
-    prev = current;
+  //ID does not match, lets recursively call again
+  if(current->getNext() != NULL){
+    prev = current; //store prev
     Delete(head, prev, current->getNext(), ID);
   }
-  else{ //if no ID in list truly
+  else{ //if no ID matches (only other possible case)
     cout<<"No matching ID in list, try again"<<endl;
   }
   
 }
 
+
+//average function
 void average(Node*& head, Node* current, float total, int it){
 
   //if nothing in list
@@ -196,17 +218,16 @@ void average(Node*& head, Node* current, float total, int it){
 
   //if reached end of list and collected all GPAs 
   if(current == NULL){
-    float calculatedAverage = total/it;
+    float calculatedAverage = total/it; //total kept track of total GPAs, it, # of iterations and do average formula
     cout<<fixed;
     cout<<setprecision(2);
     cout<<"Average: " << calculatedAverage <<endl;
     return;
   }
+
+  //do each node thats not at end
   student* s = current->getStudent();
-  total += s->getGPA();
+  total += s->getGPA(); //add current student to total
   it++;
   average(head, current->getNext(), total, it);
-
-  //
-
 }
